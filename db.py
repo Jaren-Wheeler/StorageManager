@@ -23,7 +23,7 @@ def init_db() -> None:
     with get_connection() as conn:
         conn.executescript(schema)
 
-# Insert a new product and its subtype data 
+# Insert product into database
 def insert_product(product: Product) -> None:
     if isinstance(product, ElectronicsProduct):
         product_type = "electronics"
@@ -33,27 +33,31 @@ def insert_product(product: Product) -> None:
         product_type = "base"
 
     with get_connection() as conn:
-        conn.execute(
+        cursor = conn.execute(
             """
-            INSERT INTO Products(product_id, name, price, stock_quantity, product_type)
-            VALUES(?,?,?,?,?)
+            INSERT INTO Products(name, price, stock_quantity, product_type)
+            VALUES(?,?,?,?)
             """,
-            (product.product_id, product.name, product.price, product.stock_quantity, product_type),
+            (product.name, product.price, product.stock_quantity, product_type),
         )
 
-        # Insert subtype specific data
+        # Get auto-generated ID from cursor
+        new_id = cursor.lastrowid
+        product.product_id = new_id
+
+        # Insert subtype data
         if product_type == "electronics":
             conn.execute(
                 "INSERT INTO Electronics(product_id, warranty_period) VALUES(?,?)",
-                (product.product_id, int(product.warranty_period)),
+                (new_id, int(product.warranty_period)),
             )
 
-        if product_type == "perishable":
+        elif product_type == "perishable":
             conn.execute(
                 "INSERT INTO Perishables(product_id, expiration_date) VALUES(?,?)",
-                (product.product_id, str(product.expiration_date)),
+                (new_id, str(product.expiration_date)),
             )
-
+    
 # Remove a product 
 def delete_product(product_id: int) -> None:
     with get_connection() as conn:
