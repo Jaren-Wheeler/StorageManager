@@ -1,9 +1,9 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox, simpledialog, Frame
 
 import db
 from inventory import Inventory
-from models import Sale, ValidationError
+from models import Sale, ValidationError, ElectronicsProduct, PerishableProduct
 
 
 # Main window and UI controller.
@@ -45,17 +45,105 @@ class App(tk.Tk):
 
         self.print_line("Loaded. Use the buttons on the left.")
 
+        
     # Add text to output panel
     def print_line(self, text: str) -> None:
         self.output.insert(tk.END, text + "\n")
         self.output.see(tk.END)
 
-    # Placeholder for full Add Product form 
+    # Logic and UI for adding products
     def add_product_ui(self) -> None:
-        messagebox.showinfo(
-            "TODO",
-            "add product form",
-        )
+        modal = tk.Toplevel(self)
+        modal.geometry("320x380")
+        modal.title("Add Product")
+
+        # Name
+        tk.Label(modal, text="Product Name").pack(pady=5)
+        name_entry = tk.Entry(modal)
+        name_entry.pack(pady=5)
+
+        # Price
+        tk.Label(modal, text="Price").pack(pady=5)
+        price_entry = tk.Entry(modal)
+        price_entry.pack(pady=5)
+
+        # Quantity
+        tk.Label(modal, text="Quantity").pack(pady=5)
+        qty_entry = tk.Entry(modal)
+        qty_entry.pack(pady=5)
+
+        # Product Type
+        tk.Label(modal, text="Product Type").pack(pady=5)
+
+        options = ["electronics", "perishable"]
+        selected_type = tk.StringVar(modal)
+        selected_type.set(options[0])
+
+        tk.OptionMenu(modal, selected_type, *options).pack(pady=5)
+
+        # Subtype Field Label
+        extra_label = tk.Label(modal)
+        extra_label.pack(pady=5)
+
+        extra_entry = tk.Entry(modal)
+        extra_entry.pack(pady=5)
+
+        # Dynamically update extra field label
+        def update_extra_field(*args):
+            if selected_type.get() == "electronics":
+                extra_label.config(text="Warranty Period (months)")
+            else:
+                extra_label.config(text="Expiration Date (YYYY-MM-DD)")
+
+        selected_type.trace("w", update_extra_field)
+        update_extra_field()
+
+        # Submit logic
+        def submit():
+            try:
+                name = name_entry.get().strip()
+                price = float(price_entry.get())
+                qty = int(qty_entry.get())
+                ptype = selected_type.get()
+
+                if not name:
+                    raise ValueError("Product name is required.")
+                if price <= 0:
+                    raise ValueError("Price must be positive.")
+                if qty < 0:
+                    raise ValueError("Quantity cannot be negative.")
+
+                if ptype == "electronics":
+                    warranty = int(extra_entry.get())
+                    product = ElectronicsProduct(
+                        None, name, price, qty, warranty
+                    )
+
+                else:
+                    expiration = extra_entry.get().strip()
+                    if not expiration:
+                        raise ValueError("Expiration date required.")
+                    product = PerishableProduct(
+                        None, name, price, qty, expiration
+                    )
+
+                # DB call
+                db.insert_product(product)
+
+                self.reload_inventory()
+                self.print_line(f"Added product '{name}' (ID {product.product_id})")
+
+                modal.destroy()
+
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+
+        # Buttons
+        button_frame = tk.Frame(modal)
+        button_frame.pack(pady=15)
+
+        tk.Button(button_frame, text="Cancel", command=modal.destroy).pack(side="left", padx=10)
+        tk.Button(button_frame, text="Submit", command=submit).pack(side="right", padx=10)
 
     # Remove product with user input
     def remove_product_ui(self) -> None:

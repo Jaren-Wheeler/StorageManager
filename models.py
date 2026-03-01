@@ -11,14 +11,14 @@ class ValidationError(ValueError):
 # Base product model containing shared attributes and core inventory logic
 @dataclass
 class Product:
-    product_id: int
+    product_id: int | None
     name: str
     price: float
     stock_quantity: int
 
     # Runs after object creation to enforce data validity
     def __post_init__(self) -> None:
-        if self.product_id <= 0:
+        if self.product_id is not None and self.product_id <= 0:
             raise ValidationError("product_id must be a positive integer.")
         if not self.name.strip():
             raise ValidationError("name is required.")
