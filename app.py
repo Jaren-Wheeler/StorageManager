@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox, simpledialog, Frame
 
 import db
 from inventory import Inventory
@@ -45,6 +45,7 @@ class App(tk.Tk):
 
         self.print_line("Loaded. Use the buttons on the left.")
 
+        
     # Add text to output panel
     def print_line(self, text: str) -> None:
         self.output.insert(tk.END, text + "\n")
@@ -52,10 +53,40 @@ class App(tk.Tk):
 
     # Placeholder for full Add Product form 
     def add_product_ui(self) -> None:
-        messagebox.showinfo(
-            "TODO",
-            "add product form",
-        )
+        modal = tk.Toplevel(self)
+        modal.geometry('200x300')
+        modal.title("Add Product")
+
+        # item title entry
+        tk.Label(modal,text="Product title").pack(pady=5)
+        title_entry = tk.Entry(modal)
+        title_entry.pack(pady=5)
+
+        # item price entry
+        tk.Label(modal, text = "Product Price").pack(pady=5)
+        price_entry = tk.Entry(modal)
+        price_entry.pack(pady=5)
+
+         # item title entry
+        tk.Label(modal,text="Quantity").pack(pady=5)
+        qty = tk.Entry(modal)
+        qty.pack(pady=5)
+
+        # item price entry
+        tk.Label(modal, text = "Product Type").pack(pady=5)
+
+        options = ['electronics', 'perishables']
+        selected_option = tk.StringVar(modal)
+        selected_option.set(options[0])
+        price_entry = tk.OptionMenu(modal, selected_option, *options)
+        price_entry.pack(pady=5)
+
+        buttonFrame = Frame(modal)
+        buttonFrame.pack(side = "bottom")
+
+        # cancel and submit buttons
+        tk.Button(buttonFrame, text="Cancel",command=modal.destroy).pack(side="left", anchor="e",expand=True,padx=5, pady=5)
+        tk.Button(buttonFrame, text="Submit").pack(side="right", anchor="w",expand=True,padx=5, pady=5)
 
     # Remove product with user input
     def remove_product_ui(self) -> None:
