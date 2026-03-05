@@ -37,6 +37,8 @@ class App(tk.Tk):
         tk.Button(left, text="List Products", width=22, command=self.list_products_ui).pack(pady=5)
         tk.Button(left, text="Sell Product", width=22, command=self.sell_product_ui).pack(pady=5)
         tk.Button(left, text="Restock Product", width=22, command=self.restock_product_ui).pack(pady=5)
+        tk.Button(left, text="Update Price", width=22, command=self.update_price_ui).pack(pady=5)
+
 
         tk.Button(left, text="Exit", width=22, command=self.destroy).pack(pady=15)
 
@@ -219,6 +221,46 @@ class App(tk.Tk):
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
+    # Search products by name
+    def search_product_ui(self) -> None:
+        try:
+            name= simpledialog.askstring("Search Product", "Enter Product Name")
+            if name is None:
+                return
+
+            self.reload_inventory()
+            product = self.inventory.search_product(name)
+            if product is None:
+                self.print_line(f"Product: {name}, not found.")
+            else:
+                self.print_line("  " + product.get_product_details())
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    # Update Product Price
+    def update_price_ui(self) -> None:
+        try:
+            pid = simpledialog.askinteger("Update Price", "Enter A Product ID")
+            if pid is None:
+                return
+            new_price = simpledialog.askfloat("Update Price", "Enter New Price")
+            if new_price is None:
+                return
+            
+            self.reload_inventory()
+            product = self.inventory.get_product(pid)
+            if product is None:
+                raise KeyError("product_id not found.")
+
+            product.update_price(new_price)
+            db.update_price(product.product_id, product.price)
+
+            self.reload_inventory()
+            self.print_line(f"Updated {product.name} price to ${product.price:.2f}")
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
 if __name__ == "__main__":
     App().mainloop()
