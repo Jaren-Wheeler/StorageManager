@@ -24,6 +24,13 @@ class Inventory:
     # Retrieve a product by ID 
     def get_product(self, product_id: int) -> Optional[Product]:
         return self._products.get(int(product_id))
+    
+    # Search products by name
+    def search_product(self, product_name: str) -> Optional[Product]:
+        for product in self._products.values():
+            if product.name.lower() == product_name.lower():
+                return product
+        return None
 
     # Return all products currently loaded in memory
     def list_all_products(self) -> List[Product]:
